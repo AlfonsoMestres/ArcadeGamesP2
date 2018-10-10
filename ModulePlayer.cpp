@@ -29,7 +29,14 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	backward.frames.push_back({974, 129, 57, 89});
 	backward.speed = 0.1f;
 
-	// TODO 8: setup the walk forward animation from ryu4.png
+	//walk forward animation
+	forward.frames.push_back({ 7, 130, 60, 90 });
+	forward.frames.push_back({ 80, 135, 60, 90 });
+	forward.frames.push_back({ 160, 130, 60, 90 });
+	forward.frames.push_back({ 252, 130, 60, 90 });
+	forward.frames.push_back({ 343, 130, 60, 90 });
+	forward.frames.push_back({ 427, 130, 60, 90 });
+	forward.speed = 0.1f;
 }
 
 ModulePlayer::~ModulePlayer()
