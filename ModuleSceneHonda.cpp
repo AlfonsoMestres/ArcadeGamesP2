@@ -13,16 +13,32 @@
 ModuleSceneHonda::ModuleSceneHonda(bool start_enabled) : Module(start_enabled)
 {
 	// ground
-	ground.x = 7;
-	ground.y = 377;
+	ground.x = 8;
+	ground.y = 376;
 	ground.w = 848;
-	ground.h = 64;
+	ground.h = 63;
 
-	// Background / sky
+	// Background 
 	background.x = 120;
-	background.y = 129;
+	background.y = 128;
 	background.w = 671;
-	background.h = 201;
+	background.h = 200;
+
+	// Roof
+	roof.x = 91;
+	roof.y = 8;
+	roof.w = 765;
+	roof.h = 49;
+
+	bath_place.x = 165;
+	bath_place.y = 66;
+	bath_place.w = 335;
+	bath_place.h = 51;
+
+	bucket.x = 542;
+	bucket.y = 85;
+	bucket.w = 32;
+	bucket.h = 26;
 
 }
 
@@ -34,10 +50,10 @@ bool ModuleSceneHonda::Start()
 {
 	LOG("Loading honda scene");
 
-	graphics = App->textures->Load("honda_stage.png");
+	graphics = App->textures->Load("honda_stage2.png");
 
 	App->audio->PlayMusic("honda.ogg");
-	/*App->player->Enable();*/
+	App->player->Enable();
 
 	return true;
 }
@@ -63,10 +79,12 @@ update_status ModuleSceneHonda::PreUpdate() {
 update_status ModuleSceneHonda::Update()
 {
 	// Draw everything -------------------------------------
+	App->renderer->Blit(graphics, -250, 175, &ground, 0.8f);
+	App->renderer->Blit(graphics, -135, 0, &background, 0.7f); // wall
+	App->renderer->Blit(graphics, -165, 0, &roof, 0.75f); // roof
+	App->renderer->Blit(graphics, -20, 165, &bucket, 0.8f); // bath
+	App->renderer->Blit(graphics, 25, 140, &bath_place, 0.8f); // bath
 
-	//Parallax 0: Background
-	App->renderer->Blit(graphics, 0, 0, &background, 0.8f); // wall
-	App->renderer->Blit(graphics, 0, 175, &ground, 1.0f);
 
 	return UPDATE_CONTINUE;
 }

@@ -89,11 +89,6 @@ update_status ModulePlayer::PreUpdate()
 		position.x += speed;
 	}
 
-	if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_REPEAT) {
-		// TODO: this should select the NEXT scene in the scenes array that should be created;
-		App->fade->FadeToBlack(&(Module)App->scene_honda, &(Module)App->scene_ken);
-	}
-
 	return UPDATE_CONTINUE;
 }
 

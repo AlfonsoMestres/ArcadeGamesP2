@@ -1,6 +1,7 @@
 #include "Globals.h"
 #include "Application.h"
 #include "ModuleSceneKen.h"
+#include "ModuleSceneHonda.h"
 #include "ModuleRender.h"
 #include "ModuleTextures.h"
 #include "ModulePlayer.h"
@@ -49,7 +50,7 @@ ModuleSceneKen::ModuleSceneKen(bool start_enabled) : Module(start_enabled)
 }
 
 ModuleSceneKen::~ModuleSceneKen()
-{}
+{ }
 
 // Load assets
 bool ModuleSceneKen::Start()
@@ -90,6 +91,10 @@ update_status ModuleSceneKen::PreUpdate() {
 		verticalMod = -2;
 	}
 
+	if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_REPEAT) {
+		App->fade->FadeToBlack(App->scene_honda, this, 3.0f);
+	}
+
 	return UPDATE_CONTINUE;
 
 }
@@ -108,9 +113,6 @@ update_status ModuleSceneKen::Update()
 	App->renderer->Blit(graphics, 193, 103 + verticalMod, &(boatGirl.GetCurrentFrame()), 0.85f); // girl in red ship
 	
 	App->renderer->Blit(graphics, 0, 175, &ground);
-
-	// TODO 11: Make that pressing space triggers a switch to honda logic module
-	// using FadeToBlack module
 
 	return UPDATE_CONTINUE;
 }
