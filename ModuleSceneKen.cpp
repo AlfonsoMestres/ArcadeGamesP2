@@ -109,9 +109,6 @@ update_status ModuleSceneKen::Update()
 	
 	App->renderer->Blit(graphics, 0, 175, &ground);
 
-	// TODO 10: Build an entire new scene "honda", you can find its
-	// and music in the Game/ folder
-
 	// TODO 11: Make that pressing space triggers a switch to honda logic module
 	// using FadeToBlack module
 

@@ -4,13 +4,14 @@
 #include "ModuleInput.h"
 #include "ModuleRender.h"
 #include "ModuleTextures.h"
+#include "ModuleFadeToBlack.h"
 #include "SDL/include/SDL.h"
 
 // Reference at https://www.youtube.com/watch?v=OEhmUuehGOA
 ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 {
-	position.x = 100;
-	position.y = 216;
+	position.x = 80;
+	position.y = 110;
 
 	// idle animation (arcade sprite sheet)
 	idle.frames.push_back({7, 14, 60, 90});
@@ -18,7 +19,7 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	idle.frames.push_back({184, 14, 60, 90});
 	idle.frames.push_back({276, 11, 60, 93});
 	idle.frames.push_back({366, 12, 60, 92});
-	idle.speed = 0.2f;
+	idle.speed = 0.1f;
 	
 	// walk backward animation (arcade sprite sheet)
 	backward.frames.push_back({542, 131, 61, 87});
@@ -30,12 +31,12 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	backward.speed = 0.1f;
 
 	//walk forward animation
-	forward.frames.push_back({ 7, 130, 60, 90 });
-	forward.frames.push_back({ 80, 135, 60, 90 });
-	forward.frames.push_back({ 160, 130, 60, 90 });
-	forward.frames.push_back({ 252, 130, 60, 90 });
-	forward.frames.push_back({ 343, 130, 60, 90 });
-	forward.frames.push_back({ 427, 130, 60, 90 });
+	forward.frames.push_back({ 9, 136, 53, 83 });
+	forward.frames.push_back({ 78, 131, 60, 88 });
+	forward.frames.push_back({ 162, 128, 64, 92 });
+	forward.frames.push_back({ 259, 128, 63, 90 });
+	forward.frames.push_back({ 352, 128, 54, 91 });
+	forward.frames.push_back({ 432, 131, 50, 89 });
 	forward.speed = 0.1f;
 }
 
@@ -65,11 +66,39 @@ bool ModulePlayer::CleanUp()
 }
 
 // Update
+update_status ModulePlayer::PreUpdate()
+{
+	// debug camera
+	int speed = 1;
+
+	player = idle.GetCurrentFrame();
+
+	/*if (App->input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT)
+		App->renderer->position.y += speed;
+
+	if (App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT)
+		App->renderer->position.y -= speed;*/
+
+	if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT) {
+		player = backward.GetCurrentFrame();
+		position.x -= speed;
+	}
+
+	if (App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT) {
+		player = forward.GetCurrentFrame();
+		position.x += speed;
+	}
+
+	if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_REPEAT) {
+		// TODO: this should select the NEXT scene in the scenes array that should be created;
+		App->fade->FadeToBlack(&(Module)App->scene_honda, &(Module)App->scene_ken);
+	}
+
+	return UPDATE_CONTINUE;
+}
+
 update_status ModulePlayer::Update()
 {
-	// TODO 9: Draw the player with its animation
-	// make sure to detect player movement and change its
-	// position while cycling the animation(check Animation.h)
-
+	App->renderer->Blit(graphics, position.x, position.y, &player, 1.0f);
 	return UPDATE_CONTINUE;
 }
