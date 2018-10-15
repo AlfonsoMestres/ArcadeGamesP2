@@ -19,7 +19,7 @@ public:
 	bool CleanUp();
 
 public:
-	int waveFpsLengh = 30, increasing, value;
+	int waveLengh = 30, incrWaveSize, waveState;
 	int verticalMod;
 	SDL_Texture* graphics = nullptr;
 	SDL_Rect ground;

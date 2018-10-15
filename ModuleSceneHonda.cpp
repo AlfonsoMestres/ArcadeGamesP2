@@ -83,7 +83,7 @@ update_status ModuleSceneHonda::Update()
 	App->renderer->Blit(graphics, -135, 0, &background, 0.7f); // wall
 	App->renderer->Blit(graphics, -165, 0, &roof, 0.75f); // roof
 	App->renderer->Blit(graphics, -20, 165, &bucket, 0.8f); // bath
-	App->renderer->Blit(graphics, 25, 140, &bath_place, 0.8f); // bath
+	App->renderer->Blit(graphics, 25, 140, &bath_place, 0.75f); // bath
 
 
 	return UPDATE_CONTINUE;

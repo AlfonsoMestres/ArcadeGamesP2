@@ -52,12 +52,12 @@ update_status ModuleRender::Update()
 	// debug camera
 	int speed = 1;
 
-	if (App->input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT) {
-		App->renderer->camera.y += speed;
-	}
+	// we can use this if someone is in the air
+	/*if (App->input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT)
+		App->renderer->camera.y += speed;*/
 
-	if(App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT)
-		App->renderer->camera.y -= speed;
+	/*if(App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT)
+		App->renderer->camera.y -= speed;*/
 
 	if(App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT)
 		App->renderer->camera.x += speed;

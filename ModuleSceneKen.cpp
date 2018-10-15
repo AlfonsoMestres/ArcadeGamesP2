@@ -45,8 +45,8 @@ ModuleSceneKen::ModuleSceneKen(bool start_enabled) : Module(start_enabled)
 	boatGirl.frames.push_back({ 625, 144, 30, 55 });
 	boatGirl.speed = 0.06f;
 
-	value = 0;
-	increasing = 1;
+	waveState = 0;
+	incrWaveSize = 1;
 }
 
 ModuleSceneKen::~ModuleSceneKen()
@@ -78,16 +78,16 @@ bool ModuleSceneKen::CleanUp()
 
 update_status ModuleSceneKen::PreUpdate() {
 	
-	if ((value >= waveFpsLengh*3 && increasing > 0) || (value <= 0 && increasing < 0))
-		increasing = -increasing;
+	if ((waveState >= waveLengh*3 && incrWaveSize > 0) || (waveState <= 0 && incrWaveSize < 0))
+		incrWaveSize = -incrWaveSize;
 
-	value += increasing;
+	waveState += incrWaveSize;
 
-	if (value <= waveFpsLengh) {
+	if (waveState <= waveLengh) {
 		verticalMod = 0;
-	} else if (value > waveFpsLengh && value <= waveFpsLengh*2) {
+	} else if (waveState > waveLengh && waveState <= waveLengh*2) {
 		verticalMod = -1;
-	} else if (value > waveFpsLengh*2) {
+	} else if (waveState > waveLengh *2) {
 		verticalMod = -2;
 	}
 
