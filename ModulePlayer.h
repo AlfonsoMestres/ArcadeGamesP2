@@ -45,16 +45,21 @@ public:
 	PlayerAttack playerAttack;
 	SDL_Texture* graphics = nullptr;
 	Animation* onGoingAnimation = nullptr;
+	Animation* onGoingSpecial = nullptr;
 	PlayerState nextPlayerState;
 	SDL_Rect player;
-	SDL_Rect attack;
+	SDL_Rect specialAttack;
 	Animation idle;
 	Animation backward;
 	Animation forward;
 	Animation jumpNormal;
-	Animation punchL;
-	Animation punchR;
+	Animation lightPunch;
+	Animation heavyPunch;
 	Animation crouch;
+	Animation crouchedLightPunch;
+	Animation crouchedHeavyPunch;
+	Animation throwHadouken;
+	Animation hadouken;
 	iPoint position;
 };
 

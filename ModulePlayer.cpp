@@ -40,15 +40,18 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	forward.speed = 0.1f;
 
 	// Left Punch
-	punchL.frames.push_back({ 18, 264, 66, 96 });
-	punchL.frames.push_back({ 108, 264, 92, 96 });
-	punchL.speed = 0.15f;
+	lightPunch.frames.push_back({ 18, 264, 66, 96 });
+	lightPunch.frames.push_back({ 108, 264, 92, 96 });
+	lightPunch.frames.push_back({ 18, 264, 66, 96 });
+	lightPunch.speed = 0.2f;
 
 	// Right Punch
-	punchR.frames.push_back({ 254, 269, 60, 96 });
-	punchR.frames.push_back({ 332, 269, 76, 96 });
-	punchR.frames.push_back({ 432, 264, 108, 96 });
-	punchR.speed = 0.15f;
+	heavyPunch.frames.push_back({ 254, 269, 60, 96 });
+	heavyPunch.frames.push_back({ 332, 269, 76, 96 });
+	heavyPunch.frames.push_back({ 432, 264, 108, 96 });
+	heavyPunch.frames.push_back({ 332, 269, 76, 96 });
+	heavyPunch.frames.push_back({ 254, 269, 60, 96 });
+	heavyPunch.speed = 0.2f;
 
 	// Jump Normal
 	jumpNormal.frames.push_back({ 9, 127, 56, 60 });
@@ -65,6 +68,40 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	crouch.frames.push_back({ 196, 1200, 108, 96 });
 	crouch.speed = 0.4f;
 
+	// Crouched Left Punch
+	crouchedLightPunch.frames.push_back({ 24, 1309, 69, 96 });
+	crouchedLightPunch.frames.push_back({ 118, 1309, 95, 96 });
+	crouchedLightPunch.frames.push_back({ 24, 1309, 69, 96 });
+	crouchedLightPunch.speed = 0.2f;
+
+	// Crouched Right Punch
+	crouchedHeavyPunch.frames.push_back({ 265, 1309, 64, 96 });
+	crouchedHeavyPunch.frames.push_back({ 359, 1309, 66, 96 });
+	crouchedHeavyPunch.frames.push_back({ 450, 1309, 92, 96 });
+	crouchedHeavyPunch.frames.push_back({ 359, 1309, 64, 96 });
+	crouchedHeavyPunch.speed = 0.2f;
+
+	//HadoukenThrow
+	throwHadouken.frames.push_back({ 34, 1539, 74, 96 });
+	throwHadouken.frames.push_back({ 135, 1539, 85, 96 });
+	throwHadouken.frames.push_back({ 244, 1539, 90, 96 });
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); // To maintain certain amount of time
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); // and avoid developing a feature for this
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); // we increase the last frame
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
+	throwHadouken.speed = 0.25f;
+
+	// Hadouken
+	hadouken.frames.push_back({ 484, 1563, 56, 32 });
+	hadouken.frames.push_back({ 550, 1563, 56, 32 });
+	hadouken.speed = 0.2f;
+
 }
 
 ModulePlayer::~ModulePlayer()
@@ -77,7 +114,7 @@ bool ModulePlayer::Start()
 {
 	LOG("Loading player");
 
-	graphics = App->textures->Load("ryu4.png"); // arcade version
+	graphics = App->textures->Load("ryu4.png");
 
 	return true;
 }
@@ -92,7 +129,22 @@ bool ModulePlayer::CleanUp()
 	return true;
 }
 
+void ModulePlayer::LaunchSpecialAttack(int timeGoing, bool hitSomething) {
+	if ((waveState >= waveLengh * 3 && incrWaveSize > 0) || (waveState <= 0 && incrWaveSize < 0))
+		incrWaveSize = -incrWaveSize;
+
+	waveState += incrWaveSize;
+
+	if (waveState <= waveLengh) {
+		verticalMod = 0;
+	} else {
+		verticalMod = -1;
+	}
+}
+
+
 // TODO: To feel the gameplay smoother we need to wait one more frame after finishing the animation
+// Early solution: added the resversed frame animation so the animation loops in the attacks
 void ModulePlayer::repeatUntilFinished() {
 	if (onGoingAnimation->LastFrame()) {
 		onGoingAnimation->InitAnimation();
@@ -106,9 +158,10 @@ void ModulePlayer::repeatUntilFinished() {
 // Update
 update_status ModulePlayer::PreUpdate()
 {
-	// debug camera
 	int speed = 1;
 
+	// TODO: Implement multiple key press detection so we can introduce combos and hadoukens down, downright (down and right), right, heavyPunch1
+	// https://stackoverflow.com/questions/1252976/how-to-handle-multiple-keypresses-at-once-with-sdl
 	if (onGoingAnimation != nullptr)
 		repeatUntilFinished();
 	else
@@ -125,10 +178,13 @@ update_status ModulePlayer::PreUpdate()
 				} else if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_UP) {
 					backward.InitAnimation();
 				} else if (App->input->GetKey(SDL_SCANCODE_A) == KEY_DOWN) {
-					onGoingAnimation = &punchR;
+					onGoingAnimation = &lightPunch;
 					nextPlayerState = Standing;
 				} else if (App->input->GetKey(SDL_SCANCODE_S) == KEY_DOWN) {
-					onGoingAnimation = &punchL;
+					onGoingAnimation = &heavyPunch;
+					nextPlayerState = Standing;
+				} else if (App->input->GetKey(SDL_SCANCODE_Q) == KEY_DOWN) {
+					onGoingAnimation = &throwHadouken;
 					nextPlayerState = Standing;
 				} else if (App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT) {
 					onGoingAnimation = &crouch;
@@ -138,7 +194,13 @@ update_status ModulePlayer::PreUpdate()
 				}
 				break;
 			case Crouching:
-				if (App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_UP) {
+				if (App->input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT) {
+					onGoingAnimation = &crouchedHeavyPunch;
+					nextPlayerState = Crouching;
+				} else if (App->input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) {
+					onGoingAnimation = &crouchedLightPunch;
+					nextPlayerState = Crouching;
+				} else if (App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_UP) {
 					crouch.InitAnimation();
 					playerState = Standing;
 				} 
@@ -150,14 +212,15 @@ update_status ModulePlayer::PreUpdate()
 				break;
 		}
 
-
-
-
 	return UPDATE_CONTINUE;
 }
 
 update_status ModulePlayer::Update()
 {
 	App->renderer->Blit(graphics, position.x, position.y, &player, 1.0f);
+
+	if(onGoingSpecial)
+		App->renderer->Blit(graphics, position.x, position.y, &specialAttack, 1.0f);
+
 	return UPDATE_CONTINUE;
 }
