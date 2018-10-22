@@ -10,8 +10,8 @@
 // Reference at https://www.youtube.com/watch?v=OEhmUuehGOA
 ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 {
-	position.x = 80;
-	position.y = 110;
+	playerPosition.x = 80;
+	playerPosition.y = 110;
 
 	// idle animation (arcade sprite sheet)
 	idle.frames.push_back({7, 8, 60, 96});
@@ -85,9 +85,9 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	throwHadouken.frames.push_back({ 34, 1539, 74, 96 });
 	throwHadouken.frames.push_back({ 135, 1539, 85, 96 });
 	throwHadouken.frames.push_back({ 244, 1539, 90, 96 });
-	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); // To maintain certain amount of time
-	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); // and avoid developing a feature for this
-	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); // we increase the last frame
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); 
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 }); 
+	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
 	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
 	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
 	throwHadouken.frames.push_back({ 357, 1539, 106, 96 });
@@ -100,8 +100,11 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	// Hadouken
 	hadouken.frames.push_back({ 484, 1563, 56, 32 });
 	hadouken.frames.push_back({ 550, 1563, 56, 32 });
+	hadouken.frames.push_back({ 550, 1563, 56, 32 });
 	hadouken.speed = 0.2f;
 
+	specialXMod = 0;
+	rngdAtkMaxDistTraveled = 0;
 }
 
 ModulePlayer::~ModulePlayer()
@@ -123,28 +126,39 @@ bool ModulePlayer::Start()
 bool ModulePlayer::CleanUp()
 {
 	LOG("Unloading player");
-
+	onGoingAnimation = nullptr;
+	onGoingSpecial = nullptr;
 	App->textures->Unload(graphics);
 
 	return true;
 }
 
-void ModulePlayer::LaunchSpecialAttack(int timeGoing, bool hitSomething) {
-	if ((waveState >= waveLengh * 3 && incrWaveSize > 0) || (waveState <= 0 && incrWaveSize < 0))
-		incrWaveSize = -incrWaveSize;
+// TODO: If we want multiple special attacks to be displayed, we require to set up an array of them
+// and start managing them through the list instead of the unique reference.
+void ModulePlayer::ThrowRangedAttack(Animation& specialAnimation, int attackDuration) {
+	onGoingSpecial = &specialAnimation;
+	rngdAtkMaxDistTraveled = playerPosition.x + specialAnimation.GetCurrentFrame().w * attackDuration;
+	specialAttack = onGoingSpecial->GetCurrentFrame();
+	specPosition.x = playerPosition.x + throwHadouken.GetCurrentFrame().w;
+	specPosition.y = playerPosition.y + throwHadouken.GetCurrentFrame().h * 0.25f;
+}
 
-	waveState += incrWaveSize;
+void ModulePlayer::UpdateSpecialAttack() {
+	if (onGoingSpecial->LastFrame()) {
+		onGoingSpecial->InitAnimation();
+	}
 
-	if (waveState <= waveLengh) {
-		verticalMod = 0;
-	} else {
-		verticalMod = -1;
+	specialAttack = onGoingSpecial->GetCurrentFrame();
+
+	specPosition.x += 1.5f;
+	
+	if (specPosition.x >= rngdAtkMaxDistTraveled) {
+		onGoingSpecial = nullptr;
 	}
 }
 
-
 // TODO: To feel the gameplay smoother we need to wait one more frame after finishing the animation
-// Early solution: added the resversed frame animation so the animation loops in the attacks
+// To make this happens without developing a full feature we repeated the last frame from the selected animations
 void ModulePlayer::repeatUntilFinished() {
 	if (onGoingAnimation->LastFrame()) {
 		onGoingAnimation->InitAnimation();
@@ -162,31 +176,37 @@ update_status ModulePlayer::PreUpdate()
 
 	// TODO: Implement multiple key press detection so we can introduce combos and hadoukens down, downright (down and right), right, heavyPunch1
 	// https://stackoverflow.com/questions/1252976/how-to-handle-multiple-keypresses-at-once-with-sdl
+
+	if (onGoingSpecial != nullptr) {
+		UpdateSpecialAttack();
+	}
+
 	if (onGoingAnimation != nullptr)
 		repeatUntilFinished();
 	else
 		switch (playerState) {
 			case Standing:
-				if (App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT) {
-					player = forward.GetCurrentFrame();
-					position.x += speed;
-				} else if (App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_UP) {
-					forward.InitAnimation();
-				} else if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT) {
-					player = backward.GetCurrentFrame();
-					position.x -= speed;
-				} else if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_UP) {
-					backward.InitAnimation();
+				if (App->input->GetKey(SDL_SCANCODE_Q) == KEY_DOWN) {
+					onGoingAnimation = &throwHadouken;
+					nextPlayerState = Standing;
+					ThrowRangedAttack(hadouken, 5);
 				} else if (App->input->GetKey(SDL_SCANCODE_A) == KEY_DOWN) {
 					onGoingAnimation = &lightPunch;
 					nextPlayerState = Standing;
 				} else if (App->input->GetKey(SDL_SCANCODE_S) == KEY_DOWN) {
 					onGoingAnimation = &heavyPunch;
 					nextPlayerState = Standing;
-				} else if (App->input->GetKey(SDL_SCANCODE_Q) == KEY_DOWN) {
-					onGoingAnimation = &throwHadouken;
-					nextPlayerState = Standing;
-				} else if (App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT) {
+				} else if (App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT) {
+					player = forward.GetCurrentFrame();
+					playerPosition.x += speed;
+				} else if (App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_UP) {
+					forward.InitAnimation();
+				} else if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT) {
+					player = backward.GetCurrentFrame();
+					playerPosition.x -= speed;
+				} else if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_UP) {
+					backward.InitAnimation();
+				}  else if (App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT) {
 					onGoingAnimation = &crouch;
 					nextPlayerState = Crouching;
 				} else {
@@ -217,10 +237,10 @@ update_status ModulePlayer::PreUpdate()
 
 update_status ModulePlayer::Update()
 {
-	App->renderer->Blit(graphics, position.x, position.y, &player, 1.0f);
+	App->renderer->Blit(graphics, playerPosition.x, playerPosition.y, &player, 1.0f);
 
-	if(onGoingSpecial)
-		App->renderer->Blit(graphics, position.x, position.y, &specialAttack, 1.0f);
+	if(onGoingSpecial != nullptr)
+		App->renderer->Blit(graphics, specPosition.x, specPosition.y, &specialAttack, 1.0f);
 
 	return UPDATE_CONTINUE;
 }
